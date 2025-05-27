@@ -5,7 +5,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score, accuracy_score
 import numpy as np
-from models.resnet_classifier import get_resnet18
+from resnet_classifier import get_resnet18
 
 # ====== Config ======
 DEVICE = torch.device('cpu')
