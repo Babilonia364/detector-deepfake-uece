@@ -7,28 +7,23 @@ from sklearn.metrics import roc_auc_score, accuracy_score
 import numpy as np
 from resnet_classifier import get_resnet18
 
-# ====== Config ======
 DEVICE = torch.device('cpu')
 
-# ====== Transforms ======
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.5]*3, [0.5]*3)
 ])
 
-# ====== Datasets & Loaders ======
 train_ds = datasets.ImageFolder("frames/train", transform=transform)
 test_ds = datasets.ImageFolder("frames/test", transform=transform)
 train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_ds, batch_size=32)
 
-# ====== Model ======
 model = get_resnet18().to(DEVICE)
 loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-# ====== Training Loop ======
 def evaluate(loader):
     model.eval()
     preds, labels = [], []
