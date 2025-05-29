@@ -1,4 +1,3 @@
 # deepfake-detector
 
-In order to run the code, first run run_extraction.py and change the location of the dataset, then flatten.py, then main.py
-Be careful to change the location of the dataset
+Main.py contains the new and updated code. The other files are not useful as of now, The whole code is just in one file, the breakdown will be added soon
