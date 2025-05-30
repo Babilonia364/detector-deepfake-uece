@@ -12,14 +12,21 @@ main.py - Main training & evaluation pipeline
 requirements.txt - All dependencies for this project
 
 **Model Info**-
+
 --Backbone: ResNet18 (ImageNet pretrained)
+
 --Face Detector: MTCNN from facenet-pytorch
+
 --Loss Function: CrossEntropy
+
 --Optimizer: Adam
 
 **Notes**
+
 --Face extraction only needs to be run once unless you change the dataset.
+
 --Make sure you're using GPU for faster training. (Colab, Kaggle, or local CUDA)
+
 --Supports adding video-level aggregation and temporal modeling in future updates.
 
 To setup & run:
