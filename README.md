@@ -2,6 +2,7 @@
 
 This project implements a DeepFake detection pipeline using **MTCNN for face extraction** and **ResNet18** for classification. It is designed to work on both **real and fake videos**, processing them into face crops, training a CNN classifier, and evaluating performance using metrics like **AUC-ROC** and **accuracy**.
 
+
 **File Structure**
 
 extract_faces.py - MTCNN-based face extraction from video frames
@@ -10,6 +11,7 @@ resnet_classifier.py - ResNet18 architecture with 2-class output
 evaluate.py - Evaluation functions with AUC, accuracy, ROC curve
 main.py - Main training & evaluation pipeline
 requirements.txt - All dependencies for this project
+
 
 **Model Info**-
 
@@ -21,6 +23,7 @@ requirements.txt - All dependencies for this project
 
 --Optimizer: Adam
 
+
 **Notes**
 
 --Face extraction only needs to be run once unless you change the dataset.
@@ -29,7 +32,9 @@ requirements.txt - All dependencies for this project
 
 --Supports adding video-level aggregation and temporal modeling in future updates.
 
-To setup & run:
+
+# To setup & run:
+
 **Clone the repo**
 ```bash
 git clone https://github.com/yourusername/deepfake-detector.git
