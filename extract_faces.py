@@ -6,7 +6,15 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-mtcnn = MTCNN(keep_all=True, min_face_size=20, thresholds=[0.5, 0.6, 0.7], device='cuda')
+# Configuração otimizada de dispositivo
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f"Usando dispositivo: {device}")
+
+mtcnn = MTCNN(keep_all=True, min_face_size=20, thresholds=[0.5, 0.6, 0.7], device=device)
+
+# Configuração de paralelismo
+NUM_WORKERS = min(4, os.cpu_count() // 2)  # Ajusta automaticamente
+print(f"Usando {NUM_WORKERS} workers para processamento paralelo")
 
 def extract_faces_from_video(video_path, output_dir, num_faces=10):
     os.makedirs(output_dir, exist_ok=True)
