@@ -1,5 +1,5 @@
 import torch
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, f1_score, recall_score, precision_score
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -23,16 +23,25 @@ def evaluate(model, loader, device):
     model.eval()
     all_probs = []
     all_labels = []
+    all_preds = []
+
     with torch.no_grad():
         for imgs, labels in loader:
             imgs = imgs.to(device)
             outputs = model(imgs)
-            probs = torch.softmax(outputs, dim=1)[:, 1].cpu().numpy()
-            all_probs.extend(probs)
-            all_labels.extend(labels.numpy())
+            probs = torch.softmax(outputs, dim=1)
+            predicted = torch.argmax(probs, dim=1)
 
+            all_probs.extend(probs[:, 1].cpu().numpy())
+            all_labels.extend(labels.numpy())
+            all_preds.extend(predicted.cpu().numpy())
+
+    # Calcular todas as métricas
     auc_score = roc_auc_score(all_labels, all_probs)
     acc = accuracy_score(all_labels, np.array(all_probs) > 0.5)
-    print(f"Accuracy: {acc:.4f} AUC: {auc_score:.4f}")
+    f1 = f1_score(all_labels, all_preds)
+    recall = recall_score(all_labels, all_preds)
+    precision = precision_score(all_labels, all_preds)
+    # print(f"Accuracy: {acc:.4f} AUC: {auc_score:.4f}")
     # plot_auc_roc(all_labels, all_probs)
-    return auc_score, acc
+    return auc_score, acc, f1, recall, precision

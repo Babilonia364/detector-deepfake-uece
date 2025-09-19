@@ -84,7 +84,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-5)  # 
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
 # Early stopping
-best_auc = 0
+best_f1 = 0
 best_epoch = 0
 patience = 3
 epochs_without_improvement = 0
@@ -129,14 +129,14 @@ for epoch in range(20):  # Aumentado para 20 épocas máximo
             })
 
     # Avaliar no conjunto de teste
-    auc, acc = evaluate(model, test_loader, device)
+    auc, acc, f1, recall, precision = evaluate(model, test_loader, device)
     avg_loss = running_loss / total_batches
     
-    print(f"Resultados - Loss: {running_loss:.4f} | AUC: {auc:.4f} | Acc: {acc:.4f}")
+    print(f"Resultados - Loss: {running_loss:.4f} | AUC: {auc:.4f} | Acc: {acc:.4f} | F1: {f1:.4f} | Precision: {precision:.4f} | Recall: {recall:.4f}")
     
     # Early stopping logic
-    if auc > best_auc:
-        best_auc = auc
+    if f1 > best_f1:
+        best_f1 = f1
         best_epoch = epoch + 1
         epochs_without_improvement = 0
         # Salvar melhor modelo
@@ -144,11 +144,13 @@ for epoch in range(20):  # Aumentado para 20 épocas máximo
             'epoch': epoch + 1,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
+            'f1': f1,
             'auc': auc,
             'acc': acc,
-            'loss': avg_loss
+            'precision': precision,
+            'recall': recall
         }, 'best_model.pth')
-        print(f"Novo melhor modelo salvo! AUC: {auc:.4f}")
+        print(f"Novo melhor modelo salvo! F1: {f1:.4f}")
     else:
         epochs_without_improvement += 1
         print(f"Sem melhoria ({epochs_without_improvement}/{patience})")
@@ -159,12 +161,12 @@ for epoch in range(20):  # Aumentado para 20 épocas máximo
     # Verificar early stopping
     if epochs_without_improvement >= patience:
         print(f"\nEarly stopping ativado na época {epoch+1}!")
-        print(f"Melhor AUC: {best_auc:.4f} na época {best_epoch}")
+        print(f"Melhor f1: {best_f1:.4f} na época {best_epoch}")
         break
 
 print(f"\n{'='*50}")
 print("Treinamento concluído!")
-print(f"Melhor resultado: AUC {best_auc:.4f} na época {best_epoch}")
+print(f"Melhor resultado: f1 {best_f1:.4f} na época {best_epoch}")
 
 # Carregar melhor modelo para uso final
 if os.path.exists('best_model.pth'):
@@ -173,5 +175,5 @@ if os.path.exists('best_model.pth'):
     print("Melhor modelo carregado para avaliação final")
     
     # Avaliação final com melhor modelo
-    final_auc, final_acc = evaluate(model, test_loader, device)
-    print(f"Resultado final - AUC: {final_auc:.4f} | Acc: {final_acc:.4f}")
+    final_auc, final_acc, final_f1, final_recall, final_precision = evaluate(model, test_loader, device)
+    print(f"Resultado final - AUC: {final_auc:.4f} | Acc: {final_acc:.4f} | F1-score: {final_f1:.4f} | Precision: {final_precision:.4f} | Recall: {final_recall:.4f}")
