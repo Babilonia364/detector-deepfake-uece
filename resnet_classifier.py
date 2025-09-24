@@ -2,9 +2,29 @@ import torchvision.models as models
 import torch.nn as nn
 import torch
 
-def get_resnet18():
-    # Usar a sintaxe moderna com weights em vez de pretrained
-    model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+def get_model(model_type='resnet18', num_classes=2):
+    """
+    Função para criar modelos ResNet melhorados para detecção de deepfakes
+    com regularização e arquitetura mais robusta
+    
+    Args:
+        model_type (str): Tipo de modelo ('resnet18' ou 'resnet50')
+    
+    Returns:
+        torch.nn.Module: Modelo ResNet
+    """
+    # Carregar modelo pré-treinado baseado no tipo
+    if model_type.lower() == 'resnet18':
+        model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+    elif model_type.lower() == 'resnet50':
+        model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    else:
+        raise ValueError(f"Modelo {model_type} não suportado. Use 'resnet18' ou 'resnet50'")
+
+    # Congelar apenas as primeiras camadas
+    for name, param in model.named_parameters():
+        if 'layer1' in name or 'layer2' in name:
+            param.requires_grad = False
 
     # Modificar a camada final para 2 classes (real vs fake)
     num_features = model.fc.in_features

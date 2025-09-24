@@ -21,7 +21,7 @@ from torchvision import datasets, transforms
 from sklearn.metrics import accuracy_score, roc_auc_score
 import numpy as np
 import os
-from resnet_classifier import get_resnet18
+from resnet_classifier import get_model
 from evaluate import evaluate
 from tqdm import tqdm
 
@@ -74,7 +74,7 @@ else:
     print("Classes balanceadas, usando CrossEntropyLoss padrão")
 
 # Modelo e otimizador
-model = get_resnet18()
+model = get_model()
 model = model.to(device)
 
 # Otimizador com weight decay para regularização
