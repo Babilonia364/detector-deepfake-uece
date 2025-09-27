@@ -28,7 +28,13 @@ def get_model(model_type='resnet18', num_classes=2):
 
     # Modificar a camada final para 2 classes (real vs fake)
     num_features = model.fc.in_features
-    model.fc = nn.Linear(num_features, 2)
+    model.fc = nn.Sequential(
+        nn.Dropout(0.5),
+        nn.Linear(num_features, 256),
+        nn.ReLU(),
+        nn.Dropout(0.3),
+        nn.Linear(256, 2)
+    )
 
     # Mover para o dispositivo disponível (mais flexível)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

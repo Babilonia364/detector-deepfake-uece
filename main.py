@@ -24,15 +24,26 @@ import os
 from resnet_classifier import get_model
 from evaluate import evaluate
 from tqdm import tqdm
+from focal_loss import FocalLoss
 
 # Configuração do dispositivo
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Usando dispositivo: {device}")
 
-transform = transforms.Compose([
+train_transfor = transforms.Compose([
+    transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),  # crop aleatório
+    transforms.RandomHorizontalFlip(),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225]),
+])
+
+val_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize([0.5]*3, [0.5]*3)
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225]),
 ])
 
 data_dir = "data"  # ← ALTERE PARA SEU CAMINHO REAL
@@ -52,8 +63,8 @@ if not os.path.exists(test_path):
     exit()
 
 # Carregar dados
-train_data = datasets.ImageFolder(os.path.join(data_dir, "trained"), transform=transform)
-test_data = datasets.ImageFolder(os.path.join(data_dir, "tested"), transform=transform)
+train_data = datasets.ImageFolder(os.path.join(data_dir, "trained"), transform=train_transfor)
+test_data = datasets.ImageFolder(os.path.join(data_dir, "tested"), transform=val_transform)
 train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_data, batch_size=32, shuffle=False)
 
@@ -67,7 +78,8 @@ print(f"Proporção: {class_counts[0]/sum(class_counts):.3f} vs {class_counts[1]
 if abs(class_counts[0] - class_counts[1]) > 0.2 * sum(class_counts):
     class_weights = 1. / torch.tensor(class_counts, dtype=torch.float)
     class_weights = class_weights.to(device)
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    # criterion = nn.CrossEntropyLoss(weight=class_weights)
+    criterion = FocalLoss(alpha=1, gamma=2)
     print("Usando pesos para balanceamento de classes")
 else:
     criterion = nn.CrossEntropyLoss()
@@ -78,7 +90,7 @@ model = get_model()
 model = model.to(device)
 
 # Otimizador com weight decay para regularização
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-5)  # LR menor + regularização
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)  # LR menor + regularização
 
 # Scheduler para ajustar learning rate
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
