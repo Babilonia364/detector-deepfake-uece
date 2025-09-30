@@ -21,10 +21,10 @@ def get_model(model_type='resnet18', num_classes=2):
     else:
         raise ValueError(f"Modelo {model_type} não suportado. Use 'resnet18' ou 'resnet50'")
 
-    # Congelar apenas as primeiras camadas
-    for name, param in model.named_parameters():
-        if 'layer1' in name or 'layer2' in name:
-            param.requires_grad = False
+    # # Congelar apenas as primeiras camadas
+    # for name, param in model.named_parameters():
+    #     if 'layer1' in name or 'layer2' in name:
+    #         param.requires_grad = False
 
     # Modificar a camada final para 2 classes (real vs fake)
     num_features = model.fc.in_features
