@@ -1,3 +1,4 @@
 data/
 ignore/
 *.pth
+__pycache__
