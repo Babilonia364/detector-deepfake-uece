@@ -98,7 +98,7 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 # Early stopping
 best_f1 = 0
 best_epoch = 0
-patience = 3
+patience = 5
 epochs_without_improvement = 0
 total_batches = len(train_loader)
 
