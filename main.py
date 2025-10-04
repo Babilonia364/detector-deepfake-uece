@@ -79,7 +79,8 @@ if abs(class_counts[0] - class_counts[1]) > 0.2 * sum(class_counts):
     class_weights = 1. / torch.tensor(class_counts, dtype=torch.float)
     class_weights = class_weights.to(device)
     # criterion = nn.CrossEntropyLoss(weight=class_weights)
-    criterion = FocalLoss(alpha=1, gamma=2)
+    alpha = torch.tensor([0.3, 0.7], device=device)
+    criterion = FocalLoss(alpha=alpha, gamma=2.5)
     print("Usando pesos para balanceamento de classes")
 else:
     criterion = nn.CrossEntropyLoss()
