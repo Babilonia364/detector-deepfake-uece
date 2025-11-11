@@ -2,3 +2,5 @@ data/
 ignore/
 *.pth
 __pycache__/
+/gradcam_analysis
+/predictions

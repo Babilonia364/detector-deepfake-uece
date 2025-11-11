@@ -190,3 +190,26 @@ if os.path.exists('best_model.pth'):
     # Avaliação final com melhor modelo
     final_auc, final_acc, final_f1, final_recall, final_precision = evaluate(model, test_loader, device)
     print(f"Resultado final - AUC: {final_auc:.4f} | Acc: {final_acc:.4f} | F1-score: {final_f1:.4f} | Precision: {final_precision:.4f} | Recall: {final_recall:.4f}")
+
+    # ===============================================================
+    # ANÁLISE COM GRAD-CAM (CHAMADA SIMPLES)
+    # ===============================================================
+    
+    # Importar módulo Grad-CAM
+    from grad_cam import analyze_predictions_with_cam
+    
+    print("\n" + "="*60)
+    print("INICIANDO ANÁLISE COM GRAD-CAM")
+    print("="*60)
+    
+    # Analisar 5 exemplos com Grad-CAM
+    results = analyze_predictions_with_cam(
+        model=model,
+        test_data=test_data,
+        device=device,
+        num_examples=5,
+        output_dir="gradcam_analysis"
+    )
+    
+    print("\nAnálise com Grad-CAM concluída!")
+    print("Os mapas de calor mostram as regiões que o modelo considera importantes para a decisão.")
