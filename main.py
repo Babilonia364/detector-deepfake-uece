@@ -208,7 +208,7 @@ if os.path.exists('best_model.pth'):
         test_data=test_data,
         device=device,
         num_examples=5,
-        output_dir="gradcam_analysis"
+        target_layer_name="layer3[-1]"
     )
     
     print("\nAnálise com Grad-CAM concluída!")

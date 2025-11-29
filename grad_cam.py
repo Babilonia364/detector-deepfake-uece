@@ -21,27 +21,30 @@ class GradCAM:
     def __init__(self, model, target_layer):
         self.model = model
         self.target_layer = target_layer
-        self.activations = []
-        self.gradients = []
+        self.activations = None
+        self.gradients = None
         
-        # Registrar hooks
+        # Registrar hooks - CORREÇÃO: usar hooks mais estáveis
         self.forward_handle = self.target_layer.register_forward_hook(self._forward_hook)
-        self.backward_handle = self.target_layer.register_full_backward_hook(self._backward_hook)
+        # CORREÇÃO: usar register_backward_hook em vez de register_full_backward_hook
+        self.backward_handle = self.target_layer.register_backward_hook(self._backward_hook)
     
     def _forward_hook(self, module, input, output):
-        self.activations.append(output.detach())
+        # CORREÇÃO: substituir em vez de append para evitar acúmulo
+        self.activations = output.detach()
     
     def _backward_hook(self, module, grad_input, grad_output):
+        # CORREÇÃO: capturar grad_output[0] que contém os gradientes das ativações
         if grad_output[0] is not None:
-            self.gradients.append(grad_output[0].detach())
+            self.gradients = grad_output[0].detach()
     
     def generate_cam(self, image_tensor, target_class=None, method="gradcam"):
         """
         Gera mapa de calor CAM para uma imagem
         """
         self.model.eval()
-        self.activations = []
-        self.gradients = []
+        self.activations = None
+        self.gradients = None
         
         # Forward pass
         output = self.model(image_tensor)
@@ -53,17 +56,18 @@ class GradCAM:
         # Backward pass
         self.model.zero_grad()
         class_score = output[0, target_class]
-        class_score.backward(retain_graph=True)
+        # CORREÇÃO: remover retain_graph=True para economizar memória
+        class_score.backward()
         
         # Verificar se capturamos ativações e gradientes
-        if len(self.activations) == 0:
+        if self.activations is None:
             raise RuntimeError("Não foi possível capturar ativações.")
-        if len(self.gradients) == 0:
+        if self.gradients is None:
             raise RuntimeError("Não foi possível capturar gradientes.")
         
         # Obter ativações e gradientes
-        activation = self.activations[0]
-        gradient = self.gradients[0]
+        activation = self.activations
+        gradient = self.gradients
         
         # Converter para numpy
         activation = activation.cpu().numpy()[0]  # Shape: (C, H, W)
@@ -117,8 +121,15 @@ class GradCAM:
         """
         # Pré-processar imagem original
         img = image_tensor.squeeze(0).detach().cpu().permute(1, 2, 0).numpy()
+        
+        # CORREÇÃO: Verificar se a normalização está correta para seu dataset
+        # Se seu modelo foi treinado com normalização ImageNet padrão, use:
         img = np.clip((img * np.array([0.229, 0.224, 0.225]) + 
                       np.array([0.485, 0.456, 0.406])), 0, 1)
+        
+        # Se você usou outra normalização no treino, ajuste aqui:
+        # Exemplo para normalização [0.5, 0.5, 0.5]:
+        # img = np.clip((img * 0.5 + 0.5), 0, 1)
         
         # Redimensionar CAM para tamanho da imagem
         cam_resized = cv2.resize(cam, (img.shape[1], img.shape[0]))
@@ -150,22 +161,40 @@ class GradCAM:
         self.backward_handle.remove()
 
 
-def analyze_predictions_with_cam(model, test_data, device, num_examples=5, output_dir="gradcam_results"):
+def analyze_predictions_with_cam(model, test_data, device, num_examples=5, output_dir="ignore/gradcam_results", target_layer_name=None):
     """
     Função principal para analisar predições com Grad-CAM
     """
     os.makedirs(output_dir, exist_ok=True)
     
-    # Definir camada alvo (última camada convolucional da ResNet-18)
-    try:
-        target_layer = model.layer4[-1]
-        print(f"Usando camada alvo: model.layer4[-1]")
-    except AttributeError:
+    # CORREÇÃO: Tentar diferentes camadas alvo, começando por uma menos profunda
+    if target_layer_name:
+        # Se o usuário especificou uma camada, tente usá-la
         try:
-            target_layer = model.features[-1]
-            print(f"Usando camada alvo: model.features[-1]")
-        except AttributeError:
-            print("Erro: Não foi possível encontrar a camada alvo.")
+            target_layer = eval(f"model.{target_layer_name}")
+            print(f"Usando camada alvo especificada: {target_layer_name}")
+        except:
+            print(f"Camada {target_layer_name} não encontrada. Usando fallback.")
+            target_layer_name = None
+    
+    if not target_layer_name:
+        # Tentar camadas progressivamente menos profundas
+        layer_candidates = [
+            "layer3[-1]",  # CORREÇÃO: Começar com layer3 em vez de layer4
+            "layer2[-1]",  # Opção mais rasa para melhor localização
+            "layer4[-1]",  # Original (mais profunda)
+            "features[-1]",  # Para outros tipos de modelo
+        ]
+        
+        for layer_candidate in layer_candidates:
+            try:
+                target_layer = eval(f"model.{layer_candidate}")
+                print(f"Usando camada alvo: model.{layer_candidate}")
+                break
+            except AttributeError:
+                continue
+        else:
+            print("Erro: Não foi possível encontrar uma camada alvo adequada.")
             return []
     
     gradcam = GradCAM(model, target_layer)

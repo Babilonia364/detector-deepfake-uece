@@ -4,3 +4,7 @@ ignore/
 __pycache__/
 gradcam_analysis/*
 predictions/*
+confusion_matrix.png
+precision_recall_curve.png
+probability_distribution.png
+roc_curve.png
